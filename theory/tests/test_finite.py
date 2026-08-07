@@ -1,4 +1,4 @@
-from running.finite import (
+from cryptograph_theory.finite import (
     discrete_log_bruteforce,
     discrete_log_bsgs,
     generated_subgroup,

@@ -11,7 +11,7 @@ def _():
     import marimo as mo
     import matplotlib.pyplot as plt
 
-    from running.elliptic import TOY_CURVE, TOY_GENERATOR
+    from cryptograph_theory.elliptic import TOY_CURVE, TOY_GENERATOR
 
     return TOY_CURVE, TOY_GENERATOR, math, mo, plt
 

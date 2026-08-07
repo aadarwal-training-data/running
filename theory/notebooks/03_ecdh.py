@@ -11,8 +11,8 @@ def _():
     import marimo as mo
     import matplotlib.pyplot as plt
 
-    from running.elliptic import TOY_CURVE, TOY_GENERATOR
-    from running.hkdf import derive_directional_keys
+    from cryptograph_theory.elliptic import TOY_CURVE, TOY_GENERATOR
+    from cryptograph_theory.hkdf import derive_directional_keys
 
     return TOY_CURVE, TOY_GENERATOR, derive_directional_keys, hashlib, mo, plt
 
@@ -240,14 +240,14 @@ def _(
         _alice_public_bytes,
         _bob_public_bytes,
         transcript=_transcript,
-        context=b"running/toy-ecdh/v1",
+        context=b"cryptograph/theory/toy-ecdh/v1",
     )
     protocol_bob_keys = derive_directional_keys(
         _bob_material,
         _alice_public_bytes,
         _bob_public_bytes,
         transcript=_transcript,
-        context=b"running/toy-ecdh/v1",
+        context=b"cryptograph/theory/toy-ecdh/v1",
     )
     mo.md(rf"""
     ## Transcript-bound directional keys

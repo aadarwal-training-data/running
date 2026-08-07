@@ -24,7 +24,7 @@ notebooks:
 paper:
 	mkdir -p build
 	cd tex && tectonic -X compile main.tex --outdir ../build
-	cp build/main.pdf tex/running.pdf
+	cp build/main.pdf tex/cryptograph-theory.pdf
 
 clean:
 	rm -rf build html .pytest_cache .ruff_cache

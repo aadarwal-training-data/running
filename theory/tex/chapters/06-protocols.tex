@@ -11,11 +11,11 @@ independent exchanges:
   >={Stealth[length=2mm]}
 ]
 \node[participant] (alice) {Alice};
-\node[participant,right=of alice,draw=runningorange] (mallory) {Mallory};
+\node[participant,right=of alice,draw=cryptographorange] (mallory) {Mallory};
 \node[participant,right=of mallory] (bob) {Bob};
 \draw[<->] (alice) -- node[above]{secret $S_{AM}$} (mallory);
 \draw[<->] (mallory) -- node[above]{secret $S_{MB}$} (bob);
-\node[below=8mm of mallory,text=runningorange] {$S_{AM}\ne S_{MB}$ in general};
+\node[below=8mm of mallory,text=cryptographorange] {$S_{AM}\ne S_{MB}$ in general};
 \end{tikzpicture}
 \end{center}
 

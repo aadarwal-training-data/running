@@ -1,4 +1,4 @@
-"""Educational mathematics for the running notebooks.
+"""Educational mathematics for the cryptograph theory notebooks.
 
 The implementations favor readability and are not production cryptography.
 """

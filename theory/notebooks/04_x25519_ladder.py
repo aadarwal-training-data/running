@@ -12,8 +12,8 @@ def _():
     import matplotlib.pyplot as plt
     from matplotlib.patches import Rectangle
 
-    from running.elliptic import TOY_CURVE, TOY_GENERATOR
-    from running.x25519 import (
+    from cryptograph_theory.elliptic import TOY_CURVE, TOY_GENERATOR
+    from cryptograph_theory.x25519 import (
         CURVE25519_A,
         CURVE25519_A24,
         CURVE25519_L,

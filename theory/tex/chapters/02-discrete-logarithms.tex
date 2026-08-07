@@ -47,10 +47,10 @@ still polynomial in the encoded input length.
 ]
 \node[state] (secret) {secret exponent $x$};
 \node[state,right=of secret] (public) {public element $h=g^x$};
-\draw[->,thick,runninggreen] (secret) --
-  node[above,text=runninggreen] {forward: $O(n)$ group operations} (public);
-\draw[->,thick,runningorange] (public) to[bend left=38]
-  node[below,text=runningorange,align=center]
+\draw[->,thick,cryptographgreen] (secret) --
+  node[above,text=cryptographgreen] {forward: $O(n)$ group operations} (public);
+\draw[->,thick,cryptographorange] (public) to[bend left=38]
+  node[below,text=cryptographorange,align=center]
   {generic classical inverse: $\Theta(2^{n/2})$\\for constant success}
   (secret);
 \end{tikzpicture}

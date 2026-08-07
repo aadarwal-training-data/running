@@ -1,4 +1,4 @@
-from running.hkdf import derive_directional_keys, hkdf_expand, hkdf_extract
+from cryptograph_theory.hkdf import derive_directional_keys, hkdf_expand, hkdf_extract
 
 
 def test_rfc_5869_sha256_case_1() -> None:

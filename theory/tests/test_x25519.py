@@ -1,5 +1,5 @@
-from running.elliptic import TOY_CURVE, TOY_GENERATOR
-from running.x25519 import (
+from cryptograph_theory.elliptic import TOY_CURVE, TOY_GENERATOR
+from cryptograph_theory.x25519 import (
     CURVE25519_A24,
     CURVE25519_P,
     clamp_scalar_bytes,

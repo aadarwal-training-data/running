@@ -11,7 +11,7 @@ def _():
     import marimo as mo
     import matplotlib.pyplot as plt
 
-    from running.finite import discrete_log_bruteforce, discrete_log_bsgs
+    from cryptograph_theory.finite import discrete_log_bruteforce, discrete_log_bsgs
 
     return discrete_log_bsgs, discrete_log_bruteforce, math, mo, plt
 

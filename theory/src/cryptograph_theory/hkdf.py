@@ -52,7 +52,7 @@ def derive_directional_keys(
     bob_public: bytes,
     *,
     transcript: bytes = b"",
-    context: bytes = b"running/x25519/v1",
+    context: bytes = b"cryptograph/theory/x25519/v1",
 ) -> tuple[bytes, bytes]:
     """Illustrate transcript-bound derivation of Alice→Bob and Bob→Alice keys."""
     salt = hashlib.sha256(context).digest()

@@ -10,11 +10,16 @@ permissions:
 jobs:
   python:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: theory
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v9.0.0
         with:
           enable-cache: true
+          working-directory: theory
+          cache-dependency-glob: uv.lock
       - run: uv sync --locked --dev
       - run: uv run ruff check src tests notebooks
       - run: uv run marimo check --strict notebooks/*.py
@@ -28,4 +33,4 @@ jobs:
       - uses: xu-cheng/latex-action@4.1.0
         with:
           root_file: main.tex
-          working_directory: tex
+          working_directory: theory/tex

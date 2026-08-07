@@ -1,5 +1,5 @@
 [project]
-name = "running-curve25519"
+name = "cryptograph-theory"
 version = "0.1.0"
 description = "Concise LaTeX notes and marimo labs from discrete logarithms to X25519"
 readme = "README.md"
@@ -20,7 +20,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/running"]
+packages = ["src/cryptograph_theory"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

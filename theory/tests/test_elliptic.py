@@ -1,7 +1,7 @@
 from collections import Counter
 from random import Random
 
-from running.elliptic import TOY_CURVE, TOY_GENERATOR
+from cryptograph_theory.elliptic import TOY_CURVE, TOY_GENERATOR
 
 
 def test_toy_curve_parameters_and_subgroup() -> None:

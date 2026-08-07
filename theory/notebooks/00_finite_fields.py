@@ -11,7 +11,7 @@ def _():
     import marimo as mo
     import matplotlib.pyplot as plt
 
-    from running.finite import (
+    from cryptograph_theory.finite import (
         generated_subgroup,
         mod_inverse,
         multiplicative_order,
