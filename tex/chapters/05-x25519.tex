@@ -1,0 +1,106 @@
+\section{X25519 as an x-only byte-string function}
+
+Curve25519 is a curve. X25519 is the RFC-defined function
+\[
+  \{0,1\}^{256}\times\{0,1\}^{256}
+  \longrightarrow\{0,1\}^{256}
+\]
+that decodes a scalar and a Montgomery $u$-coordinate, evaluates x-only scalar
+multiplication, and returns a 32-byte $u$-coordinate \cite{rfc7748}.
+
+\subsection{Scalar and coordinate decoding}
+
+The scalar is a 32-byte little-endian string. Before interpreting it as an
+integer, X25519 applies the bit operation commonly called \emph{clamping}:
+
+\begin{lstlisting}[language=C]
+k[0]  &= 248;  /* clear bits 0, 1, and 2 */
+k[31] &= 127;  /* clear bit 255 */
+k[31] |= 64;   /* set bit 254 */
+\end{lstlisting}
+
+The resulting integer is exactly
+\[
+  k=2^{254}+8m,
+  \qquad 0\le m\le2^{251}-1.
+\]
+It is divisible by $8$, its top processed bit is fixed, and it is not simply
+the original bytes reduced modulo $\ell$. Clamping cannot create entropy.
+
+An input $u$ is also decoded little-endian. X25519 masks the most significant
+bit of the final byte and accepts noncanonical values, processing them as field
+elements modulo $p$. Generic ``full point validation'' is not the X25519 input
+rule: no $v$-coordinate is supplied, and the ladder intentionally handles both
+the curve and its twist.
+
+\subsection{The Montgomery ladder}
+
+Conceptually, after processing a scalar prefix $r$, the ladder maintains
+adjacent multiples
+\[
+  R_0=[r]P,
+  \qquad
+  R_1=[r+1]P.
+\]
+For the next bit, the abstract transition is
+\[
+\begin{array}{c|cc}
+\text{bit}&R_0'&R_1'\\
+\hline
+0&[2]R_0&R_0+R_1\\
+1&R_0+R_1&[2]R_1.
+\end{array}
+\]
+One doubling and one differential addition occur for either bit. Constant-time
+conditional swaps select the registers without a secret-dependent branch.
+
+The implementation stores projective coordinates $X:Z$ representing
+$u=X/Z$. This defers the costly field inversion until the end. Let $x_1$ be
+the input $u$ and let $(X_2,Z_2)$ and $(X_3,Z_3)$ represent the two ladder
+registers. One RFC ladder step uses
+\begin{align*}
+  A_0&=X_2+Z_2, & AA&=A_0^2,\\
+  B_0&=X_2-Z_2, & BB&=B_0^2,\\
+  E&=AA-BB,\\
+  C_0&=X_3+Z_3, & D_0&=X_3-Z_3,\\
+  DA&=D_0A_0, & CB&=C_0B_0,
+\end{align*}
+followed by
+\begin{align*}
+  X_3'&=(DA+CB)^2,&
+  Z_3'&=x_1(DA-CB)^2,\\
+  X_2'&=AA\,BB,&
+  Z_2'&=E(AA+a_{24}E),
+\end{align*}
+where
+\[
+  a_{24}=\frac{486662-2}{4}=121665.
+\]
+All expressions are reduced modulo $p$. Another common, equivalent convention
+uses $121666=(A+2)/4$ together with $BB$ in the last formula; mixing the
+constant from one convention with the formula from the other is a bug.
+
+After scanning bits $254$ through $0$, the output is
+\[
+  u=X_2Z_2^{p-2}\pmod p,
+\]
+encoded as 32 little-endian bytes. Fermat inversion also maps $Z_2=0$ to the
+all-zero output in the RFC computation.
+
+The fixed arithmetic pattern removes a common timing leak, but regularity is
+not a proof against every cache, power, fault, or microarchitectural attack.
+The companion Python follows the formulas for inspection and test vectors; its
+branches and big integers are explicitly variable-time.
+
+\subsection{X25519 Diffie--Hellman}
+
+The base coordinate is encoded as the byte $9$ followed by 31 zero bytes.
+Alice and Bob compute
+\begin{align*}
+  A&=\X(a,9), & B&=\X(b,9),\\
+  S_A&=\X(a,B), & S_B&=\X(b,A).
+\end{align*}
+For honest inputs, $S_A=S_B$ because both encode $u([ab]G)$. RFC~7748
+recommends deriving application keys from the shared output and both public
+keys; an enclosing protocol must also specify how an all-zero output is
+handled.

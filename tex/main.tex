@@ -1,0 +1,53 @@
+\input{preamble}
+
+\title{\texttt{running}\\[0.25em]
+\large From Discrete Logarithms to Curve25519 and X25519}
+\author{\href{https://github.com/aadarwal-training-data}{aadarwal-training-data}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note builds the shortest rigorous path from modular arithmetic to X25519.
+It defines the discrete logarithm problem in an arbitrary cyclic group,
+instantiates it as the elliptic-curve discrete logarithm problem, derives the
+Diffie--Hellman equality, and then studies Curve25519's field, subgroup,
+cofactor, quadratic twist, x-only Montgomery ladder, and byte encoding. The
+last section states the boundary between a scalar-multiplication primitive and
+a secure authenticated protocol. Companion marimo notebooks make every small
+example executable and visual.
+\end{abstract}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=5mm,
+  box/.style={draw=black!25,rounded corners,inner sep=5pt,fill=black!2},
+  >={Stealth[length=2mm]}
+]
+\node[box] (field) {finite fields};
+\node[box,right=of field] (group) {cyclic groups};
+\node[box,right=of group] (dlp) {DLP / ECDLP};
+\node[box,right=of dlp] (dh) {Diffie--Hellman};
+\node[box,right=of dh] (x) {X25519};
+\draw[->] (field) -- (group);
+\draw[->] (group) -- (dlp);
+\draw[->] (dlp) -- (dh);
+\draw[->] (dh) -- (x);
+\end{tikzpicture}
+\end{center}
+
+\tableofcontents
+
+\input{chapters/01-foundations}
+\input{chapters/02-discrete-logarithms}
+\input{chapters/03-elliptic-curves}
+\input{chapters/04-curve25519}
+\input{chapters/05-x25519}
+\input{chapters/06-protocols}
+\input{chapters/07-exercises}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,104 @@
+\section{Curve25519 and its discrete logarithm}
+
+Bernstein designed Curve25519 for fast Diffie--Hellman and straightforward
+constant-time implementations \cite{bernstein2006curve25519}. RFC~7748 gives
+the modern interoperable specification \cite{rfc7748}.
+
+\subsection{Parameters}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field prime & $p=2^{255}-19$ \\
+Curve & $v^2=u^3+486662u^2+u$ over $\F_p$ \\
+Prime subgroup order &
+$\ell=2^{252}+27742317777372353535851937790883648493$ \\
+Cofactor & $h=8$, so $\#E(\F_p)=8\ell$ \\
+Base point & Montgomery coordinate $u(G)=9$, with $\ord(G)=\ell$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The name ``25519'' comes from $2^{255}-19$, not from a catalog number or a
+claim of 255-bit security. The pseudo-Mersenne shape gives
+\[
+  2^{255}\equiv19\pmod p,
+\]
+so high limbs can be folded back into the field efficiently. The public
+coefficient $486662$ is not a key: it is part of a parameter choice that gives
+useful group and twist orders together with efficient Montgomery formulas.
+
+Since $\ell\approx2^{252}$, a generic Pollard-rho attack costs on the order of
+\[
+  \sqrt\ell\approx2^{126}
+\]
+group operations. The curve is therefore conventionally placed near the
+128-bit classical security level. Field size and security level are different
+quantities.
+
+\subsection{What changes when only the u-coordinate is exposed?}
+
+On a Montgomery curve,
+\[
+  -(u,v)=(u,-v).
+\]
+Thus $u(P)=u(-P)$: retaining only $u$ identifies a point with its inverse. For
+the odd prime-order subgroup $\langle G\rangle$, this is the only ambiguity.
+
+\begin{proposition}
+For nonidentity points in $\langle G\rangle$,
+\[
+  u([a]G)=u([b]G)
+  \quad\Longleftrightarrow\quad
+  b\equiv a\ \text{or}\ b\equiv-a\pmod\ell.
+\]
+\end{proposition}
+
+\begin{proof}
+Two nonidentity curve points with the same $u$ have $v$-coordinates that are
+negatives, so they are equal or inverses. Hence $[b]G=[a]G$ or
+$[b]G=-[a]G$. Since $G$ has order $\ell$, the corresponding scalar
+congruences follow. The reverse implication is immediate.
+\end{proof}
+
+Consequently, the x-only discrete-log relation for an honest public key is
+recovery of $a$ up to sign modulo $\ell$. That is enough to break
+Diffie--Hellman, because
+\[
+  u([-a]B)=u(-[a]B)=u([a]B).
+\]
+An ECDLP solution recovers a scalar residue, not necessarily the original
+32-byte secret input: X25519 deliberately overwrites five input bits during
+scalar decoding, and scalar multiplication depends only on the residue in the
+subgroup.
+
+The corresponding x-only CDH problem is
+\[
+  \bigl(u(G),u([a]G),u([b]G)\bigr)
+  \longmapsto u([ab]G).
+\]
+This is the formal connection between the abstract DLP and honest Curve25519
+public keys. It does not establish an equivalence between ECDLP and CDH; it
+shows that an ECDLP solver is sufficient to solve the Curve25519 CDH instance.
+
+\subsection{The quadratic twist and cofactor}
+
+For a nonsquare $d\in\F_p$, a quadratic twist can be represented as
+\[
+  E^d:\quad d v^2=u^3+Au^2+u.
+\]
+The curve and twist orders satisfy
+\[
+  \#E(\F_p)+\#E^d(\F_p)=2(p+1).
+\]
+A received $u$ may correspond to the main curve or to its twist. Curve25519's
+twist has cofactor $4$ and a large prime factor, so the x-only ladder can be
+defined robustly on both sides. Inputs in a small-order component can still
+produce the all-zero output. Making the scalar divisible by $8$ annihilates
+the curve's cofactor-$8$ component (and the twist's cofactor-$4$ component),
+but it does not make every peer input contributory or authenticated.
+
+\begin{takeaway}
+The hard group problem lives in the subgroup of order $\ell$, not in all
+$2^{255}$ possible byte strings and not in the cofactor-$8$ ambient group.
+\end{takeaway}

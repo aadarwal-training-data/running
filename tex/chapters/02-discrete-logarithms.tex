@@ -1,0 +1,95 @@
+\section{The discrete logarithm problem}
+
+\subsection{Formal definition}
+
+\begin{definition}[Discrete logarithm problem]
+Let $\G=\langle g\rangle$ be a cyclic group of order $r$. Given $g$ and
+$h\in\G$, the discrete logarithm problem is to find
+\[
+  x\in\Z/r\Z\quad\text{such that}\quad h=g^x.
+\]
+In additive notation, given $G$ and $Q\in\langle G\rangle$, find $x$ such that
+\[
+  Q=[x]G.
+\]
+\end{definition}
+
+The group, generator, and generator order are part of the problem statement.
+The answer is unique only modulo $\ord(g)$. If the target is outside the
+generated subgroup, no answer exists.
+
+Forward evaluation uses square-and-multiply or double-and-add and requires
+$O(\log r)$ group operations. Reversal has no comparable generic algorithm.
+This asymmetry is computational, not algebraic: the forward map is a homomorphism
+from $\Z/r\Z$ onto $\langle g\rangle$.
+
+\subsection{Generic attacks}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Method & Time & Storage \\
+\midrule
+exhaustive search & $O(r)$ & $O(1)$ \\
+baby-step--giant-step & $O(\sqrt r)$ & $O(\sqrt r)$ \\
+Pollard rho & expected $O(\sqrt r)$ & $O(1)$ \\
+Pohlig--Hellman & controlled by the largest prime factor of $r$ & varies \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Baby-step--giant-step writes $x=im+j$ with $m=\lceil\sqrt r\rceil$ and
+looks for a collision
+\[
+  h(g^{-m})^i=g^j.
+\]
+Pollard rho replaces the stored table by a pseudorandom walk and a cycle-finding
+method \cite{pollard1978rho}. Generic-group lower bounds explain why the square
+root repeatedly appears \cite{shoup1997lower}.
+
+Pohlig--Hellman reduces a DLP of order
+$r=\prod_i q_i^{e_i}$ to DLPs in the prime-power factors. A secure group
+therefore needs a large prime factor; a large ambient field by itself is not
+enough.
+
+Finite-field multiplicative groups also admit index-calculus-style algorithms
+that exploit their representation and beat the generic square-root bound.
+No analogous general subexponential method is known for a properly chosen
+elliptic-curve group. This is why a 255-bit elliptic-curve field can target a
+security level that would require a much larger finite-field Diffie--Hellman
+modulus.
+
+\subsection{DLP, CDH, and DDH are different problems}
+
+Let $g$ generate a group of prime order $r$ and choose unknown
+$a,b\in\Z/r\Z$.
+
+\begin{definition}[Computational Diffie--Hellman]
+The $\CDH$ problem maps
+\[
+  (g,g^a,g^b)\longmapsto g^{ab}.
+\]
+In additive notation it maps $(G,[a]G,[b]G)$ to $[ab]G$.
+\end{definition}
+
+\begin{definition}[Decisional Diffie--Hellman]
+The $\DDH$ problem asks whether a supplied $T$ equals $g^{ab}$, given
+$(g,g^a,g^b,T)$.
+\end{definition}
+
+A DLP solver gives a CDH solver: recover $a$, then compute $(g^b)^a$.
+A CDH solver gives a DDH solver: compute $g^{ab}$ and compare it with $T$.
+Thus there are solver implications
+\[
+  \DLP\Longrightarrow\CDH\Longrightarrow\DDH,
+\]
+but these problems are not known to be equivalent in arbitrary groups. In
+some pairing-friendly groups, for example, DDH is easy while CDH may remain
+hard. Saying ``DLP is hard'' is therefore not itself a proof of every
+Diffie--Hellman assumption.
+
+\begin{takeaway}
+Curve25519 does not introduce a new kind of logarithm. It supplies a carefully
+chosen cyclic subgroup in which the ordinary DLP is written additively and is
+called ECDLP.
+\end{takeaway}

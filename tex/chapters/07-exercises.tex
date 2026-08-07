@@ -1,0 +1,72 @@
+\section{Exercises and compact answers}
+
+\begin{enumerate}
+  \item In $\F_{29}$, verify that $7^{-1}=25$ and compute $2^{19}$.
+
+  \item State the DLP with all required parameters. Why is the answer defined
+        modulo $\ord(g)$ rather than modulo a field prime?
+
+  \item Show algebraically that a DLP solver gives a CDH solver. Explain why
+        this does not prove the converse.
+
+  \item On the toy curve $v^2=u^3+5u^2+u$ over $\F_{127}$, verify that
+        $G=(18,55)$ lies on the curve and that $[17]G=\OO$.
+
+  \item With toy secrets $a=5$ and $b=9$, compute the two public points and
+        the shared point.
+
+  \item Why does an x-only public key recover a prime-subgroup scalar only up
+        to sign? Why is that ambiguity irrelevant to x-only Diffie--Hellman?
+
+  \item Distinguish the field prime $p$, subgroup order $\ell$, and cofactor
+        $h$ for Curve25519. Which controls generic ECDLP cost?
+
+  \item Apply the X25519 clamping rules to 32 bytes of \texttt{ff}. Which
+        properties of the resulting integer are forced?
+
+  \item Explain why clearing the low three scalar bits does not remove the
+        need to handle all-zero output.
+
+  \item Draw a man-in-the-middle exchange and list the inputs that should be
+        bound into the KDF.
+\end{enumerate}
+\subsection*{Answers}
+
+\begin{enumerate}
+  \item $7\cdot25=175\equiv1\pmod{29}$ and $2^{19}\equiv26\pmod{29}$.
+
+  \item Specify a cyclic group $\G=\langle g\rangle$, its operation, generator
+        $g$, order $r=\ord(g)$, and target $h\in\langle g\rangle$; solve
+        $g^x=h$. Exponents represent the same action exactly modulo $r$.
+
+  \item Recover $a$ from $(g,g^a)$ and compute $(g^b)^a=g^{ab}$. No known
+        generic reduction recovers a discrete logarithm from an arbitrary CDH
+        solver.
+
+  \item Substitution gives $55^2\equiv18^3+5\cdot18^2+18\pmod{127}$.
+        Double-and-add produces the identity at scalar $17$; the notebook shows
+        the entire cycle.
+
+  \item $[5]G=(122,73)$, $[9]G=(124,74)$, and both sides compute
+        $[45]G=[11]G=(70,64)$.
+
+  \item Points $P$ and $-P$ share $u$. Thus the scalar is $a$ or $-a$ modulo
+        $\ell$. Multiplying by either produces shared points that are negatives,
+        which again share the same output $u$.
+
+  \item $p=2^{255}-19$ defines field arithmetic,
+        $\ell\approx2^{252}$ is the prime subgroup order, and $h=8$ satisfies
+        $\#E=8\ell$. Generic ECDLP cost is governed by $\sqrt\ell$.
+
+  \item The first byte becomes \texttt{f8}; the final byte becomes
+        \texttt{7f}. The integer is divisible by $8$, bit $254$ is set, and
+        bit $255$ is clear.
+
+  \item A malicious small-order input is annihilated by the cofactor-divisible
+        scalar and can therefore produce zero. Clamping controls the scalar; it
+        does not authenticate or make the peer contributory.
+
+  \item Mallory substitutes one public key toward Alice and another toward
+        Bob, obtaining two secrets. A reviewed KDF input binds the raw DH result,
+        ordered public keys, roles, suite or protocol label, and transcript.
+\end{enumerate}

@@ -1,0 +1,96 @@
+\section{Elliptic-curve groups and ECDH}
+
+\subsection{From a cubic equation to a group}
+
+For an odd prime $p$, a short Weierstrass curve has the form
+\[
+  E:\quad y^2=x^3+ax+b,
+  \qquad 4a^3+27b^2\not\equiv0\pmod p.
+\]
+The nonzero discriminant excludes cusps and self-intersections. The solutions
+in $\F_p^2$, together with a formal point at infinity $\OO$, form a finite
+abelian group. The familiar chord-and-tangent picture over the reals is useful
+intuition; over $\F_p$ the curve is a discrete point cloud and the algebraic
+formulas are what survive.
+
+Curve25519 uses Montgomery form \cite{montgomery1987}:
+\[
+  E_{A,B}:\quad Bv^2=u^3+Au^2+u,
+  \qquad B(A^2-4)\ne0.
+\]
+For $B=1$ and distinct noninverse points
+$P=(u_1,v_1)$ and $Q=(u_2,v_2)$, put
+\[
+  \lambda=(v_2-v_1)(u_2-u_1)^{-1}.
+\]
+Then $P+Q=(u_3,v_3)$ where
+\[
+  u_3=\lambda^2-A-u_1-u_2,
+  \qquad
+  v_3=\lambda(u_1-u_3)-v_1.
+\]
+For doubling, replace the slope by
+\[
+  \lambda=(3u_1^2+2Au_1+1)(2v_1)^{-1}.
+\]
+All operations occur in $\F_p$. The exceptional cases complete the group law:
+$P+\OO=P$, and $P+(-P)=\OO$ with $-(u,v)=(u,-v)$.
+
+\subsection{Scalar multiplication and ECDLP}
+
+Double-and-add evaluates $[k]P$ from the binary expansion of $k$ using
+$O(\log k)$ additions. The corresponding elliptic-curve discrete logarithm
+problem is
+\[
+  (E,G,Q=[a]G)\longmapsto a\pmod{\ord(G)}.
+\]
+It is exactly the DLP from the preceding section, instantiated in an elliptic
+curve subgroup.
+
+Hasse's theorem bounds the ambient group order:
+\[
+  \bigl|\#E(\F_p)-(p+1)\bigr|\le2\sqrt p.
+\]
+Cryptographic parameters select a point $G$ of large prime order $\ell$ and
+write
+\[
+  \#E(\F_p)=h\ell,
+\]
+where $h$ is the cofactor. Multiplying an arbitrary point by $h$ moves it into
+a subgroup whose order divides $\ell$, but protocol-specific validation rules
+are still required.
+
+\subsection{An exact toy Montgomery curve}
+
+The notebooks use
+\[
+  E/\F_{127}:\quad v^2=u^3+5u^2+u.
+\]
+It has $136=8\cdot17$ points. The point
+\[
+  G=(18,55)
+\]
+has order $17$, so its subgroup is small enough to enumerate yet has the same
+``cofactor times prime'' shape as Curve25519. For example,
+\[
+  [5]G=(122,73),\qquad [9]G=(124,74),\qquad[11]G=(70,64).
+\]
+This curve is pedagogical and cryptographically worthless.
+
+\subsection{Elliptic-curve Diffie--Hellman}
+
+Alice chooses $a$ and publishes $A=[a]G$. Bob chooses $b$ and publishes
+$B=[b]G$. Associativity of scalar multiplication gives
+\[
+  [a]B=[a]([b]G)=[ab]G=[b]([a]G)=[b]A.
+\]
+For the toy defaults $a=5$ and $b=9$, both sides reach
+\[
+  [45]G=[11]G=(70,64),
+\]
+because scalars are interpreted modulo $17$.
+
+The original Diffie--Hellman insight is that public values can be combined
+with a private scalar to reach the same hidden group element
+\cite{diffie1976}. A passive observer receives $G,A,B$ and faces CDH; recovering
+either scalar via ECDLP is one sufficient way to solve it.

@@ -1,0 +1,61 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{amsthm}
+\usepackage{booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{hyperref}
+
+\definecolor{runningblue}{HTML}{245D85}
+\definecolor{runningorange}{HTML}{A65319}
+\definecolor{runninggreen}{HTML}{1F6B45}
+\definecolor{runninggray}{HTML}{555B62}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=runningblue,
+  citecolor=runninggreen,
+  urlcolor=runningorange,
+  pdftitle={running: from discrete logarithms to X25519}
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{black!15},
+  backgroundcolor=\color{black!2},
+  showstringspaces=false,
+  breaklines=true
+}
+
+\newtheorem{definition}{Definition}[section]
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{remark}[definition]{Remark}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\OO}{\mathcal{O}}
+\newcommand{\ord}{\operatorname{ord}}
+\newcommand{\DLP}{\mathsf{DLP}}
+\newcommand{\CDH}{\mathsf{CDH}}
+\newcommand{\DDH}{\mathsf{DDH}}
+\newcommand{\X}{\operatorname{X25519}}
+\newcommand{\bits}{\operatorname{bits}}
+
+\newenvironment{takeaway}
+  {\begin{quote}\color{runningblue}\bfseries Key point.\ }
+  {\end{quote}}
+
+\setlist{nosep,leftmargin=*}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}

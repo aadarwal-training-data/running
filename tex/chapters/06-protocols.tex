@@ -1,0 +1,92 @@
+\section{From X25519 to a secure protocol}
+
+X25519 is neither encryption nor authentication. It computes raw shared key
+material. An active attacker can substitute public keys and complete two
+independent exchanges:
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=27mm,
+  participant/.style={draw=black!25,rounded corners,fill=black!2,minimum width=18mm,minimum height=8mm},
+  >={Stealth[length=2mm]}
+]
+\node[participant] (alice) {Alice};
+\node[participant,right=of alice,draw=runningorange] (mallory) {Mallory};
+\node[participant,right=of mallory] (bob) {Bob};
+\draw[<->] (alice) -- node[above]{secret $S_{AM}$} (mallory);
+\draw[<->] (mallory) -- node[above]{secret $S_{MB}$} (bob);
+\node[below=8mm of mallory,text=runningorange] {$S_{AM}\ne S_{MB}$ in general};
+\end{tikzpicture}
+\end{center}
+
+Secrecy against a passive observer is not proof of the peer's identity.
+Authentication must come from a certificate and signature, a pre-shared key,
+an authenticated static key, or another mechanism defined by the protocol.
+
+\subsection{Key derivation and context binding}
+
+A raw Diffie--Hellman coordinate is not an application key. A construction
+such as HKDF first extracts a pseudorandom key and then expands labeled keys
+for specific purposes \cite{rfc5869}:
+\[
+  \text{raw DH}
+  \longrightarrow
+  \text{all-zero handling}
+  \longrightarrow
+  \operatorname{HKDF}(S,A,B,\text{roles},\text{transcript})
+  \longrightarrow
+  \begin{cases}
+  K_{A\to B},\\
+  K_{B\to A}.
+  \end{cases}
+\]
+Length prefixes or another unambiguous encoding prevent distinct transcripts
+from collapsing to the same KDF input. Ordered public keys and role labels stop
+reflection and unknown-key-share confusions. Separate directional keys simplify
+nonce and replay reasoning.
+
+RFC~7748 permits a generic implementation to check for all-zero output, while
+newer profiles can strengthen that rule. The X25519-based HPKE suite requires
+the recipient to abort on an all-zero DH result and uses labeled HKDF inputs
+\cite{rfc9180}. A high-level library should surface an unacceptable-peer-key
+error rather than silently continuing.
+
+After key derivation, an AEAD supplies confidentiality and ciphertext
+integrity. Its nonce requirements remain independent protocol obligations.
+
+\subsection{Forward secrecy, signatures, and quantum attacks}
+
+Fresh ephemeral X25519 keys can provide forward secrecy when the handshake is
+authenticated and the ephemeral secrets are erased. Curve25519 itself does not
+guarantee freshness or erasure.
+
+Ed25519 is a signature scheme over a related Edwards representation
+\cite{rfc8032}. It is not X25519. Its public-key encoding, private-key
+derivation, and security purpose differ. Conversion routines exist in some
+libraries, but distinct purpose-specific key pairs are the safer default.
+
+Finally, Curve25519 is not post-quantum. A sufficiently capable quantum
+computer running Shor's algorithm would solve ECDLP. Hybrid deployments combine
+classical authentication and X25519 with a standardized post-quantum mechanism
+according to a reviewed protocol; ad hoc concatenation is not a protocol.
+
+\subsection{Composition checklist}
+
+For production work:
+\begin{enumerate}
+  \item use a maintained X25519 implementation rather than handwritten field
+        arithmetic;
+  \item follow the enclosing protocol's all-zero rule;
+  \item bind ordered public keys, roles, suite identifiers, and the transcript
+        into a KDF;
+  \item authenticate the peer;
+  \item derive separate keys by purpose and direction;
+  \item use an AEAD and obey its nonce limits;
+  \item prefer a reviewed construction such as TLS, Noise, or HPKE.
+\end{enumerate}
+
+\begin{takeaway}
+The chain is modular: ECDLP hardness supports scalar multiplication; X25519
+packages scalar multiplication; a KDF turns its output into keys; authentication
+binds those keys to identities; and an AEAD protects messages.
+\end{takeaway}

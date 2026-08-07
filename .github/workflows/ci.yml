@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+      - run: uv sync --locked --dev
+      - run: uv run ruff check src tests notebooks
+      - run: uv run marimo check --strict notebooks/*.py
+      - run: uv run pytest
+      - run: make notebooks
+
+  latex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: xu-cheng/latex-action@4.1.0
+        with:
+          root_file: main.tex
+          working_directory: tex
