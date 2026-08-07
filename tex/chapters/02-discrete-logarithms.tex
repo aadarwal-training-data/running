@@ -18,10 +18,103 @@ The group, generator, and generator order are part of the problem statement.
 The answer is unique only modulo $\ord(g)$. If the target is outside the
 generated subgroup, no answer exists.
 
-Forward evaluation uses square-and-multiply or double-and-add and requires
-$O(\log r)$ group operations. Reversal has no comparable generic algorithm.
-This asymmetry is computational, not algebraic: the forward map is a homomorphism
-from $\Z/r\Z$ onto $\langle g\rangle$.
+\subsection{What ``efficient'' and ``hard'' mean}
+
+Write
+\[
+  n=\lceil\log_2 r\rceil,
+\]
+the bit length of the exponent space. Complexity must be measured in $n$, not
+in the numerical value $r$. After reducing $x$ modulo $r$, binary
+square-and-multiply uses $n-1$ squarings and at most $n-1$ additional
+multiplications. Thus
+\[
+  x\longmapsto g^x
+  \qquad\text{costs fewer than $2n$ group operations.}
+\]
+Double-and-add gives the same $O(n)$ count for $x\mapsto[x]G$. A group
+operation is not a single hardware instruction: modular multiplication and
+reduction have their own bit cost. If field elements have $k$ bits and
+$M(k)$ is the bit cost of a $k$-bit multiplication, finite-field
+square-and-multiply costs roughly $O(nM(k))$ up to reduction factors. This is
+still polynomial in the encoded input length.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=53mm,
+  state/.style={draw=black!25,rounded corners,fill=black!2,inner sep=6pt},
+  >={Stealth[length=2mm]}
+]
+\node[state] (secret) {secret exponent $x$};
+\node[state,right=of secret] (public) {public element $h=g^x$};
+\draw[->,thick,runninggreen] (secret) --
+  node[above,text=runninggreen] {forward: $O(n)$ group operations} (public);
+\draw[->,thick,runningorange] (public) to[bend left=38]
+  node[below,text=runningorange,align=center]
+  {generic classical inverse: $\Theta(2^{n/2})$\\for constant success}
+  (secret);
+\end{tikzpicture}
+\end{center}
+
+The reverse arrow combines an upper bound with a restricted lower bound.
+Baby-step--giant-step and Pollard rho use $O(\sqrt r)=O(2^{n/2})$ group
+operations. More precisely, Shoup bounded the success probability of a
+classical generic attack using $T$ oracle operations by $O(T^2/r)$ when $r$ is
+prime \cite{shoup1997lower}. Constant success therefore requires
+$\Omega(\sqrt r)$ operations, and the generic classical complexity is
+$\Theta(2^{n/2})$.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lllX}
+\toprule
+Problem & Known work & Class & Status \\
+\midrule
+$x\mapsto g^x$ or $[x]G$ & $O(n)$ group operations & polynomial & proven algorithm \\
+generic DLP/ECDLP & $\Theta(2^{n/2})$ & exponential & generic-model theorem \\
+chosen concrete curve & best known: generic & exponential & assumption; no unconditional bound \\
+quantum DLP/ECDLP & $\operatorname{poly}(n)$ & polynomial & Shor's algorithm \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The word \emph{generic} is essential. The lower bound deliberately ignores the
+internal representation of a group element, so it cannot rule out a shortcut
+that exploits a particular encoding. No unconditional theorem says that
+Curve25519 ECDLP requires exponential classical time. Its hardness is an
+assumption supported by the generic lower bound, decades of cryptanalysis, and
+the absence of a curve-specific shortcut.
+
+Complexity-theoretic cryptography states that assumption over a family of
+groups, and for random instances rather than one hand-picked puzzle:
+
+\begin{definition}[Classical DLP hardness assumption]
+Let $(\G_\lambda=\langle g_\lambda\rangle)$ be an efficiently represented
+family of prime-order groups, with orders $r_\lambda$. DLP is hard for the
+family if every classical probabilistic polynomial-time algorithm $\mathcal A$
+satisfies
+\[
+  \Pr_{x\leftarrow\Z/r_\lambda\Z}
+  \left[
+    \mathcal A(\mathsf{par}_\lambda,g_\lambda,g_\lambda^x)
+      \equiv x\pmod{r_\lambda}
+  \right]
+  \le \operatorname{negl}(\lambda).
+\]
+The probability includes the randomness of $x$ and of $\mathcal A$;
+$\operatorname{negl}$ decreases faster than every inverse polynomial.
+\end{definition}
+
+Within one fixed cyclic group, DLP is random self-reducible. Given an arbitrary
+target $h=g^x$, choose random $t$ and send $hg^t=g^{x+t}$ to a solver for
+random targets; subtracting $t$ from its answer recovers $x$. This connects
+random-target and worst-target instances inside that group, but it does not
+prove that the selected group family is hard.
+
+This is an average-case one-wayness assumption, not a proof that DLP is
+NP-hard. Such NP-hardness is not known, and worst-case NP-hardness alone would
+not provide the random-instance hardness needed in cryptography. Curve25519 is
+one fixed parameter set, so its ``security bits'' are a concrete estimate of
+the best known attack cost rather than an asymptotic theorem.
 
 \subsection{Generic attacks}
 
@@ -30,9 +123,9 @@ from $\Z/r\Z$ onto $\langle g\rangle$.
 \toprule
 Method & Time & Storage \\
 \midrule
-exhaustive search & $O(r)$ & $O(1)$ \\
-baby-step--giant-step & $O(\sqrt r)$ & $O(\sqrt r)$ \\
-Pollard rho & expected $O(\sqrt r)$ & $O(1)$ \\
+exhaustive search & $O(r)=O(2^n)$ & $O(1)$ \\
+baby-step--giant-step & $O(\sqrt r)=O(2^{n/2})$ & $O(\sqrt r)$ \\
+Pollard rho & expected $O(\sqrt r)=O(2^{n/2})$ & $O(1)$ \\
 Pohlig--Hellman & controlled by the largest prime factor of $r$ & varies \\
 \bottomrule
 \end{tabular}
@@ -44,20 +137,32 @@ looks for a collision
   h(g^{-m})^i=g^j.
 \]
 Pollard rho replaces the stored table by a pseudorandom walk and a cycle-finding
-method \cite{pollard1978rho}. Generic-group lower bounds explain why the square
-root repeatedly appears \cite{shoup1997lower}.
+method \cite{pollard1978rho}. The classical generic-group lower bound explains
+why the square root repeatedly appears \cite{shoup1997lower}.
 
 Pohlig--Hellman reduces a DLP of order
-$r=\prod_i q_i^{e_i}$ to DLPs in the prime-power factors. A secure group
+$r=\prod_i q_i^{e_i}$ to DLPs in the prime-power factors \cite{pohlig1978}. A secure group
 therefore needs a large prime factor; a large ambient field by itself is not
 enough.
 
 Finite-field multiplicative groups also admit index-calculus-style algorithms
-that exploit their representation and beat the generic square-root bound.
-No analogous general subexponential method is known for a properly chosen
-elliptic-curve group. This is why a 255-bit elliptic-curve field can target a
-security level that would require a much larger finite-field Diffie--Hellman
-modulus.
+that exploit their representation and beat the generic square-root bound. For
+prime fields, the number field sieve has heuristic subexponential running time
+of the form \cite{gordon1993nfs}
+\[
+  L_p[1/3,c]
+  =\exp\!\left((c+o(1))(\log p)^{1/3}(\log\log p)^{2/3}\right).
+\]
+This is subexponential in $p$ but still superpolynomial in the encoded input
+length $\log p$. No analogous general subexponential method is known for a
+properly chosen elliptic-curve group. This is why a 255-bit elliptic-curve
+field can target a security level that would require a much larger
+finite-field Diffie--Hellman modulus.
+
+All of these classical comparisons have a quantum boundary. Shor's algorithm
+solves DLP, including ECDLP, in time polynomial in the encoded input size on a
+sufficiently capable fault-tolerant quantum computer \cite{shor1997}. The
+hardness assumption is therefore explicitly classical, not post-quantum.
 
 \subsection{DLP, CDH, and DDH are different problems}
 
@@ -83,10 +188,32 @@ Thus there are solver implications
 \[
   \DLP\Longrightarrow\CDH\Longrightarrow\DDH,
 \]
-but these problems are not known to be equivalent in arbitrary groups. In
+so the implications between hardness assumptions run in the reverse direction:
+\[
+  \text{$\DDH$ hard}\Longrightarrow\text{$\CDH$ hard}
+  \Longrightarrow\text{$\DLP$ hard}.
+\]
+These problems are not known to be equivalent in arbitrary groups. In
 some pairing-friendly groups, for example, DDH is easy while CDH may remain
 hard. Saying ``DLP is hard'' is therefore not itself a proof of every
 Diffie--Hellman assumption.
+
+\subsection{From one-wayness to cryptography}
+
+For a prime-order group with a full point encoding, $x\mapsto g^x$ is a
+bijection and a candidate \emph{one-way permutation}: everyone can evaluate
+it, while inversion on a random output is assumed hard. This easy-forward,
+hard-backward pattern is one of cryptography's recurring building blocks. Hash
+functions seek preimage resistance, and trapdoor constructions add secret
+information that enables inversion.
+
+Diffie--Hellman uses the asymmetry differently: neither Alice nor Bob inverts
+the public map. Each applies a scalar they already know to the other party's
+public element. A passive outsider must compute the shared element without
+knowing either scalar, which is the CDH problem. Thus one-wayness is necessary
+intuition but not a complete security argument: key agreement needs a
+CDH-style assumption and a full protocol still needs key derivation,
+authentication, and message protection.
 
 \begin{takeaway}
 Curve25519 does not introduce a new kind of logarithm. It supplies a carefully

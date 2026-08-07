@@ -66,9 +66,10 @@ derivation, and security purpose differ. Conversion routines exist in some
 libraries, but distinct purpose-specific key pairs are the safer default.
 
 Finally, Curve25519 is not post-quantum. A sufficiently capable quantum
-computer running Shor's algorithm would solve ECDLP. Hybrid deployments combine
-classical authentication and X25519 with a standardized post-quantum mechanism
-according to a reviewed protocol; ad hoc concatenation is not a protocol.
+computer running Shor's algorithm would solve ECDLP \cite{shor1997}. Hybrid
+deployments combine classical authentication and X25519 with a standardized
+post-quantum mechanism according to a reviewed protocol; ad hoc concatenation
+is not a protocol.
 
 \subsection{Composition checklist}
 
@@ -86,7 +87,9 @@ For production work:
 \end{enumerate}
 
 \begin{takeaway}
-The chain is modular: ECDLP hardness supports scalar multiplication; X25519
-packages scalar multiplication; a KDF turns its output into keys; authentication
-binds those keys to identities; and an AEAD protects messages.
+The chain is modular: efficient scalar multiplication supplies the public
+operation; a CDH-style assumption says an outsider cannot combine two public
+points into their shared point; solving ECDLP is one sufficient break. X25519
+packages this group action, a KDF turns its output into keys, authentication
+binds those keys to identities, and an AEAD protects messages.
 \end{takeaway}

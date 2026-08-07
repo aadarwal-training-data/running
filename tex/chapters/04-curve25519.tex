@@ -36,6 +36,26 @@ group operations. The curve is therefore conventionally placed near the
 128-bit classical security level. Field size and security level are different
 quantities.
 
+The forward and inverse costs are now concrete. X25519 evaluates a public key
+with a fixed 255-round Montgomery ladder, each round using a constant number of
+field operations. For an honest prime-subgroup public key, the best known
+general classical inversion has the scale
+\[
+\begin{array}{rcll}
+  a &\longmapsto& u([a]G) & 255\text{ ladder rounds},\\[0.2em]
+  u([a]G) &\longmapsto& \{a,-a\}\pmod\ell
+    & \text{about }2^{126}\text{ generic curve operations}.
+\end{array}
+\]
+Ladder rounds and Pollard-rho steps are not identical units of wall-clock
+work. The point of the comparison is their scaling: fixed polynomial-sized
+forward work versus exponential generic inversion in the subgroup bit length.
+The x-only sign ambiguity changes what counts as an inverse, but not the
+asymptotic attack cost. The displayed $2^{126}$ is an order-of-magnitude, not
+an exact wall-clock guarantee: the x-only quotient, clamped-scalar interval,
+parallelism, and constant factors move concrete estimates within roughly the
+$2^{125}$--$2^{126}$ range \cite{bernstein2006curve25519}.
+
 \subsection{What changes when only the u-coordinate is exposed?}
 
 On a Montgomery curve,
@@ -61,8 +81,10 @@ $[b]G=-[a]G$. Since $G$ has order $\ell$, the corresponding scalar
 congruences follow. The reverse implication is immediate.
 \end{proof}
 
-Consequently, the x-only discrete-log relation for an honest public key is
-recovery of $a$ up to sign modulo $\ell$. That is enough to break
+Consequently, the full-point map is a candidate one-way permutation on the
+prime-order subgroup, while the x-only map is two-to-one away from the
+identity. Its discrete-log relation for an honest public key is recovery of
+$a$ up to sign modulo $\ell$. That is enough to break
 Diffie--Hellman, because
 \[
   u([-a]B)=u(-[a]B)=u([a]B).

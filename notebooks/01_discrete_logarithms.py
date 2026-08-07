@@ -118,36 +118,97 @@ def _(dlp_order, dlp_secret, math, mo, plt):
 
 
 @app.cell
-def _(math, mo, plt):
-    _bit_sizes = list(range(8, 257, 8))
-    _forward = [math.log2(bits) for bits in _bit_sizes]
+def _(mo):
+    complexity_bits = mo.ui.slider(
+        8,
+        512,
+        step=4,
+        value=252,
+        label=r"group-order bit length $n=\lceil\log_2 r\rceil$",
+        show_value=True,
+    )
+    return (complexity_bits,)
+
+
+@app.cell
+def _(complexity_bits, math, mo, plt):
+    _n = complexity_bits.value
+    _bit_sizes = list(range(8, 513, 4))
+
+    # The vertical axis is logarithmic: y=k means approximately 2^k operations.
+    _forward = [math.log2(2 * bits) for bits in _bit_sizes]
     _generic = [bits / 2 for bits in _bit_sizes]
     _brute = list(_bit_sizes)
-    dlp_complexity_figure, _axis = plt.subplots(figsize=(7.4, 4.2))
-    _axis.plot(_bit_sizes, _forward, label="forward scalar multiplication", linewidth=2)
-    _axis.plot(_bit_sizes, _generic, label="BSGS / Pollard rho", linewidth=2)
-    _axis.plot(_bit_sizes, _brute, label="exhaustive search", linewidth=2)
-    _axis.axvline(252, color="#64748b", linestyle="--", linewidth=1)
-    _axis.annotate(
-        r"Curve25519 subgroup: $\ell\approx2^{252}$" "\n" r"generic work $\approx2^{126}$",
-        xy=(252, 126),
-        xytext=(130, 165),
-        arrowprops={"arrowstyle": "->", "color": "#64748b"},
+
+    dlp_complexity_figure, _axis = plt.subplots(figsize=(7.6, 4.4))
+    _axis.plot(
+        _bit_sizes,
+        _forward,
+        label=r"forward: square-and-multiply $O(n)$",
+        linewidth=2.4,
     )
-    _axis.set_xlabel(r"subgroup size $\log_2 r$ (bits)")
-    _axis.set_ylabel(r"$\log_2$ group operations")
-    _axis.set_xlim(0, 265)
-    _axis.set_ylim(0, 265)
+    _axis.plot(
+        _bit_sizes,
+        _generic,
+        label=r"generic reverse: Pollard rho $O(2^{n/2})$",
+        linewidth=2.4,
+    )
+    _axis.plot(
+        _bit_sizes,
+        _brute,
+        label=r"naive reverse: brute force $O(2^n)$",
+        linewidth=2.4,
+    )
+    _axis.axvline(_n, color="#f59e0b", linestyle="--", linewidth=1.5)
+    _axis.scatter(
+        [_n, _n, _n],
+        [math.log2(2 * _n), _n / 2, _n],
+        color="#f59e0b",
+        edgecolor="white",
+        linewidth=0.8,
+        s=42,
+        zorder=3,
+    )
+    _axis.axvline(252, color="#64748b", linestyle=":", linewidth=1)
+    _axis.text(
+        252,
+        0.97,
+        r" Curve25519 $\ell\approx2^{252}$",
+        rotation=90,
+        va="top",
+        ha="right",
+        color="#64748b",
+        transform=_axis.get_xaxis_transform(),
+    )
+    _axis.set_title("Polynomial forward work versus exponential reverse work")
+    _axis.set_xlabel(r"input scale $n=\lceil\log_2 r\rceil$ (bits)")
+    _axis.set_ylabel(r"work exponent $k$ in about $2^k$ group operations")
+    _axis.set_xlim(0, 520)
+    _axis.set_ylim(0, 520)
     _axis.grid(alpha=0.2)
     _axis.legend(frameon=False, loc="upper left")
     dlp_complexity_figure.tight_layout()
+
+    _forward_bound = 2 * _n
+    _generic_exponent = _n / 2
+    _generic_label = f"{_generic_exponent:g}"
     mo.vstack(
         [
-            mo.md("## Forward versus reverse work"),
+            mo.md("## The computational asymmetry"),
+            complexity_bits,
             dlp_complexity_figure,
-            mo.md(r"""
-            The square-root line is why a subgroup near $2^{252}$ targets
-            roughly 126–128 bits of classical security—not 252 or 255 bits.
+            mo.md(rf"""
+            At $n={_n}$, square-and-multiply takes at most about
+            $2n={_forward_bound}$ group operations. A generic classical DLP
+            attack instead takes about $2^{{{_generic_label}}}$ operations with
+            Pollard rho, while naive search takes about $2^{{{_n}}}$.
+
+            This is the cryptographic gap: **polynomial work** for the honest
+            direction, but **exponential work** for the best generic classical
+            reverse attack. At Curve25519's $n\approx252$, the generic reverse
+            cost is about $2^{{126}}$: about 126 bits against generic ECDLP
+            attacks, conventionally grouped near the 128-bit classical level,
+            rather than 252 or 255 bits.
             """),
         ]
     )
@@ -176,11 +237,41 @@ def _(mo):
             groups. Recovering $a$ certainly breaks CDH; CDH hardness is still
             a distinct assumption.
             """),
-            "Representation matters": mo.md(r"""
-            Multiplicative finite-field DLP admits index-calculus-style
-            algorithms that beat generic square-root attacks. No analogous
-            general attack is known for well-chosen elliptic curves. Equal
-            field bit lengths therefore do not imply equal security.
+            "What is actually proved?": mo.md(r"""
+            Let $r\approx2^n$. In the **generic-group model**, any classical
+            algorithm that only uses the abstract group operations needs
+            $\Omega(\sqrt r)=\Omega(2^{n/2})$ operations to solve DLP with
+            meaningful probability. Pollard rho meets that scale using little
+            memory; baby-step–giant-step uses $O(\sqrt r)$ time and memory.
+
+            This is not an unconditional proof that DLP is hard in every
+            concrete group. Multiplicative finite-field DLP has
+            index-calculus-style algorithms that exploit the representation
+            and beat the generic square-root bound. No comparable general
+            attack is known for well-chosen elliptic curves, so equal field bit
+            lengths do not imply equal security.
+            """),
+            "From DLP to Curve25519": mo.md(r"""
+            Elliptic curves replace exponentiation by scalar multiplication:
+
+            \[
+              x\longmapsto [x]G,
+              \qquad [x]G\longmapsto x\quad\text{(ECDLP)}.
+            \]
+
+            Curve25519's main prime-order subgroup has
+            $\ell\approx2^{252}$, so generic ECDLP work is about
+            $\sqrt\ell\approx2^{126}$. X25519 exposes a $u$-coordinate and its
+            key-agreement assumption is CDH-like: solving ECDLP would certainly
+            break it, although protocol security is not literally the claim
+            that every session requires recovering a long-term scalar.
+            """),
+            "The quantum boundary": mo.md(r"""
+            Shor's quantum algorithm solves finite-field DLP and elliptic-curve
+            DLP in polynomial time on a sufficiently large, fault-tolerant
+            quantum computer. The asymmetry plotted above is therefore a
+            **classical** hardness story. Curve25519 is excellent classical
+            cryptography, but it is not post-quantum cryptography.
             """),
         }
     )

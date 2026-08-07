@@ -6,6 +6,12 @@
   \item State the DLP with all required parameters. Why is the answer defined
         modulo $\ord(g)$ rather than modulo a field prime?
 
+  \item Let $r\approx2^n$. Compare the group-operation cost of forward
+        exponentiation with a generic classical DLP attack. Evaluate the
+        exponents at $n=252$, and identify which lower bound is model-specific.
+
+  \item Why do Alice and Bob not solve a discrete logarithm during ECDH?
+
   \item Show algebraically that a DLP solver gives a CDH solver. Explain why
         this does not prove the converse.
 
@@ -38,6 +44,16 @@
   \item Specify a cyclic group $\G=\langle g\rangle$, its operation, generator
         $g$, order $r=\ord(g)$, and target $h\in\langle g\rangle$; solve
         $g^x=h$. Exponents represent the same action exactly modulo $r$.
+
+  \item Forward evaluation is $O(n)$ group operations; generic classical
+        inversion is $\Theta(2^{n/2})$. At $n=252$ the scales are hundreds of
+        forward operations versus about $2^{126}$ generic attack operations.
+        The matching $\Omega(2^{n/2})$ lower bound holds in the classical
+        generic group model, not unconditionally for every curve encoding.
+
+  \item Alice computes $[a]B$ using her known $a$, while Bob computes $[b]A$
+        using his known $b$. Both are forward scalar multiplications and equal
+        $[ab]G$; an outsider without either scalar faces CDH.
 
   \item Recover $a$ from $(g,g^a)$ and compute $(g^b)^a=g^{ab}$. No known
         generic reduction recovers a discrete logarithm from an arbitrary CDH

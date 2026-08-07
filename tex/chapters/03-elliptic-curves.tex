@@ -84,6 +84,19 @@ $B=[b]G$. Associativity of scalar multiplication gives
 \[
   [a]B=[a]([b]G)=[ab]G=[b]([a]G)=[b]A.
 \]
+Alice and Bob never run the hard inverse. They compute \emph{sideways}: each
+combines a scalar they know with the public point they received.
+\[
+\begin{aligned}
+  \text{Alice: }(a,B)&\longmapsto[a]B=[ab]G,\\
+  \text{Bob: }(b,A)&\longmapsto[b]A=[ab]G,\\
+  \text{Eve: }(G,A,B)&\mathrel{\not\!\longrightarrow}[ab]G
+    \qquad\text{(the CDH challenge).}
+\end{aligned}
+\]
+The secret scalar is not a trapdoor that makes inversion easy; it enables a
+different efficient group action that both honest parties can make agree.
+
 For the toy defaults $a=5$ and $b=9$, both sides reach
 \[
   [45]G=[11]G=(70,64),

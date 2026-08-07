@@ -68,7 +68,20 @@ value
 
 The note makes this relationship precise and distinguishes it from the stronger
 claim that DLP, CDH, and DDH are equivalent—they are not known to be equivalent
-in arbitrary groups.
+in arbitrary groups. Passive X25519 key agreement rests on an x-only CDH-style
+assumption; an ECDLP solver is one sufficient way to break it, not a proof that
+the two problems are equivalent.
+
+### What “hard” means here
+
+Let (n=lceillog_2 ellceil) be the subgroup-order bit length. Forward
+scalar multiplication takes (O(n)) group operations. Generic classical
+inversion takes (Theta(sqrtell)=Theta(2^{n/2})): Pollard rho supplies the
+upper bound, while Shoup’s matching lower bound applies only in the generic
+group model. Curve25519 therefore has a best-known generic ECDLP cost near
+(2^{126}), but this is a classical hardness assumption—not an unconditional
+complexity lower bound. A sufficiently capable quantum computer could instead
+use Shor’s polynomial-time algorithm.
 
 ## Scope and safety
 
@@ -80,4 +93,7 @@ See [`SECURITY.md`](SECURITY.md).
 Primary references are [RFC 7748](https://www.rfc-editor.org/rfc/rfc7748.html),
 Bernstein's [Curve25519 paper](https://cr.yp.to/ecdh/curve25519-20060209.pdf),
 [RFC 5869](https://www.rfc-editor.org/rfc/rfc5869.html), and
-[RFC 9180](https://www.rfc-editor.org/rfc/rfc9180.html).
+[RFC 9180](https://www.rfc-editor.org/rfc/rfc9180.html). The complexity
+discussion uses Shoup's [generic-group lower bound](https://www.shoup.net/papers/dlbounds1.pdf),
+Gordon's [number-field-sieve analysis](https://www.dmgordon.org/papers/log.pdf),
+and Shor's [quantum discrete-log algorithm](https://arxiv.org/abs/quant-ph/9508027).
